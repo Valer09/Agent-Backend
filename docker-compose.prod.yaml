@@ -1,0 +1,7 @@
+version: "3.9"
+
+services:
+  agentapi:
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      KeyVaultUri: ${keyvault_uri}
