@@ -7,7 +7,7 @@ using Azure.AI.OpenAI;
 
 namespace AI_Agent_Backend.Service;
 
-public class AgentService : IAgentService
+internal class AgentService : IAgentService
 {
   private readonly ChatClient _chatClient;
   private readonly string _deploymentName;

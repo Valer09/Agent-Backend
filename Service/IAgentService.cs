@@ -2,7 +2,7 @@ using AI_Agent_Backend.Model;
 
 namespace AI_Agent_Backend.Service;
 
-internal interface IAgentService
+public interface IAgentService
 {
   Task<AgentResponse> AskAsync(AgentRequest request);
   Task<AgentResponse> SummarizeAsync(AgentRequest request);

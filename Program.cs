@@ -37,23 +37,5 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseAuthorization();
-
-//TODO: These endpoints declarations are going to be replaced by controllers
-app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
-app.MapPost("/agent/ask", async ([FromBody] AgentRequest rq, [FromServices] IAgentService service) => await HandleBasicRequest(rq, service));
-app.MapPost("/agent/summarize", async ([FromBody] AgentRequest rq, [FromServices] IAgentService service) => await HandleBasicRequest(rq, service));
-
 app.MapControllers();
-
 app.Run();
-
-static async Task<IResult> HandleBasicRequest(AgentRequest agentRequest, IAgentService agentService)
-{
-  if (string.IsNullOrWhiteSpace(agentRequest.Input))
-  {
-    return Results.BadRequest(new { error = "Input is required" });
-  }
-
-  var res = await agentService.AskAsync(agentRequest);
-  return Results.Ok(res);
-}
