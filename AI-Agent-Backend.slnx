@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="AI-Agent-Backend.csproj" />
+  <Project Path="AI-Agent-Backend.Tests/AI-Agent-Backend.Tests.csproj" />
 </Solution>

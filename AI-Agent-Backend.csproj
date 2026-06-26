@@ -11,6 +11,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="AI-Agent-Backend.Tests\**" />
+    <Content Remove="AI-Agent-Backend.Tests\**" />
+    <EmbeddedResource Remove="AI-Agent-Backend.Tests\**" />
+    <None Remove="AI-Agent-Backend.Tests\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Azure.AI.OpenAI" Version="2.9.0-beta.1" />
     <PackageReference Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.5.1" />
     <PackageReference Include="Azure.Identity" Version="1.21.0" />
