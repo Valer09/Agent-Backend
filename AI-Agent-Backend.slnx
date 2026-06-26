@@ -1,8 +1,4 @@
 <Solution>
-  <Folder Name="/.github/" />
-  <Folder Name="/.github/workflows/">
-    <File Path="build-and-test.yml" />
-  </Folder>
   <Project Path="AI-Agent-Backend.csproj" />
   <Project Path="AI-Agent-Backend.Tests/AI-Agent-Backend.Tests.csproj" />
 </Solution>
