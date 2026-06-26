@@ -1,11 +1,11 @@
-@AI_Agent_Backend_HostAddress = http://localhost:5149
+@AI_Agent_Backend_HostAddress = https://localhost:32785
 
 ### Health check
-GET {{host}}/agent/health
+GET {{AI_Agent_Backend_HostAddress}}/Agent/health
 Accept: application/json
 
 ### Ask - free question to the model
-POST {{host}}/agent/ask
+POST {{AI_Agent_Backend_HostAddress}}/agent/ask
 Content-Type: application/json
 
 {
@@ -13,7 +13,7 @@ Content-Type: application/json
 }
 
 ### Ask — technical question to the model
-POST {{host}}/agent/ask
+POST {{AI_Agent_Backend_HostAddress}}/agent/ask
 Content-Type: application/json
 
 {
@@ -21,7 +21,7 @@ Content-Type: application/json
 }
 
 ### Summarize — text to summarize
-POST {{host}}/agent/summarize
+POST {{AI_Agent_Backend_HostAddress}}/agent/summarize
 Content-Type: application/json
 
 {
@@ -29,7 +29,7 @@ Content-Type: application/json
 }
 
 ### Vaalidation: empty input — must return 400
-POST {{host}}/agent/ask
+POST {{AI_Agent_Backend_HostAddress}}/agent/ask
 Content-Type: application/json
 
 {
