@@ -195,10 +195,22 @@ https://docassistantapp.lemonbush-92b0b723.eastus2.azurecontainerapps.io
 - `POST /agent/ask`
 - `POST /agent/summarize`
 
-## Future improvements
+## Future possible improvements
 
-- Authentication via Azure Managed Identity (secretless approach)
-- Server-Sent Events (SSE) streaming for real-time responses
-- Client-configurable system prompt
-- Application-level rate limiting with `AspNetCoreRateLimit`
-- Azure Monitor / Application Insights integration
+- **CD pipeline via GitHub Actions** — automate Docker build, push to Azure Container Registry,
+  and Container Apps deployment on every push to `main`, replacing all manual CLI steps
+
+- **Azure Managed Identity authentication** — secretless access to Azure OpenAI and ACR,
+  eliminating API key management entirely
+
+- **Secret management hardening** — migrate API key from environment variable
+  to Azure Container Apps Secrets or Azure Key Vault reference
+
+- **Server-Sent Events (SSE) streaming** — real-time token-by-token response from the model
+
+- **Client-configurable system prompt** — allow callers to override the default system message per request
+
+- **Application-level rate limiting** — request throttling with `AspNetCoreRateLimit`
+
+- **Azure Monitor / Application Insights integration** — distributed tracing, metrics dashboards,
+  and alerting for production observability
