@@ -26,7 +26,7 @@ jobs:
         run: dotnet build --no-restore --configuration Release
 
       - name: Run tests
-        run: dotnet test Tests/AI-Agent-Backend.Tests.csproj --no-build --configuration Release --verbosity normal
+        run: dotnet test AI-Agent-Backend.Tests/AI-Agent-Backend.Tests.csproj --no-build --configuration Release --verbosity normal
         env:
           ASPNETCORE_ENVIRONMENT: Development
           AzureOpenAI__Endpoint: https://placeholder.openai.azure.com/
