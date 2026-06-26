@@ -183,6 +183,18 @@ AI-Agent-Backend/
 
 ***
 
+
+
+## Live Demo
+
+Public endpoint deployed on **Azure Container Apps**:
+https://docassistantapp.lemonbush-92b0b723.eastus2.azurecontainerapps.io
+
+
+- `GET /agent/health`
+- `POST /agent/ask`
+- `POST /agent/summarize`
+
 ## Future improvements
 
 - Authentication via Azure Managed Identity (secretless approach)
