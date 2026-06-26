@@ -364,3 +364,4 @@ FodyWeavers.xsd
 /.env
 /agentkey.txt
 /docker-compose.local.yaml
+/appsettings.Development.json
