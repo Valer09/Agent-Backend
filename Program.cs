@@ -1,3 +1,4 @@
+using AI_Agent_Backend.Configuration;
 using AI_Agent_Backend.Model;
 using AI_Agent_Backend.Service;
 using Azure.Identity;
@@ -13,6 +14,13 @@ if (!string.IsNullOrWhiteSpace(keyVaultUri) && builder.Environment.IsProduction(
     new Uri(keyVaultUri),
     new DefaultAzureCredential());
 }
+
+// Options pattern with startup validation
+builder.Services
+  .AddOptions<AzureOpenAiOptions>()
+  .Bind(builder.Configuration.GetSection(AzureOpenAiOptions.SectionName))
+  .ValidateDataAnnotations()
+  .ValidateOnStart();
 
 // Services
 builder.Services.AddControllers();

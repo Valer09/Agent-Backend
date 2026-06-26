@@ -1,62 +1,87 @@
 
+using AI_Agent_Backend.Configuration;
 using AI_Agent_Backend.Model;
 using Azure;
-using OpenAI.Chat;
-using System.Text.Json;
 using Azure.AI.OpenAI;
+using Microsoft.Extensions.Options;
+using OpenAI.Chat;
+using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
+using System.Text.Json;
 
 namespace AI_Agent_Backend.Service;
 
 internal class AgentService : IAgentService
 {
   private readonly ChatClient _chatClient;
-  private readonly string _deploymentName;
-  private readonly string _endpoint;
-  private readonly string _apiKey;
-  private readonly AzureOpenAIClient _client;
-  private AzureOpenAIClientOptions _options;
+  
+  private readonly ILogger<AgentService> _logger;
+  private readonly AzureOpenAiOptions _openAiOptions;
 
-  public AgentService(IConfiguration configuration)
+  public AgentService(IOptions<AzureOpenAiOptions> options, ILogger<AgentService> logger)
   {
-    
-    _apiKey = configuration["AzureOpenAI:ApiKey"] ?? throw new InvalidOperationException("Missing AzureOpenAI:ApiKey");
-    _endpoint = configuration["AzureOpenAI:Endpoint"] ?? throw new InvalidOperationException("Missing AzureOpenAI:Endpoint");
-    _deploymentName = configuration["AzureOpenAI:DeploymentName"] ?? throw new InvalidOperationException("Missing AzureOpenAI:DeploymentName");
-    _options = new AzureOpenAIClientOptions(AzureOpenAIClientOptions.ServiceVersion.V2025_01_01_Preview);
 
-    _client = new(
-      endpoint: new($"{_endpoint}"), 
-      credential: new AzureKeyCredential(_apiKey),
-      options: _options);
+    var openAiOptions = options.Value;
+    var clientOptions = new AzureOpenAIClientOptions(AzureOpenAIClientOptions.ServiceVersion.V2025_01_01_Preview);
+    var client = new AzureOpenAIClient(new Uri(openAiOptions.Endpoint), new AzureKeyCredential(openAiOptions.ApiKey), clientOptions);
 
-    _chatClient = _client.GetChatClient(_deploymentName);
+    _openAiOptions = openAiOptions;
+    _logger = logger;
+    _chatClient = client.GetChatClient(openAiOptions.DeploymentName);
   }
 
-  async Task<AgentResponse> IAgentService.AskAsync(AgentRequest request)
-  {
-    var messages = new List<ChatMessage>
-    {
-      new SystemChatMessage("Sei un assistente tecnico per un backend documentale Azure AI. Rispondi in italiano, in modo chiaro e professionale."),
+  public async Task<AgentResponse> AskAsync(AgentRequest request)
+    => await ExecuteAsync("ask", request.Input, [
+      new SystemChatMessage(
+        "Sei un assistente tecnico per un backend documentale Azure AI. Rispondi in italiano, in modo chiaro e professionale."),
       new UserChatMessage(request.Input)
-    };
+    ]);
 
-    var result = await _chatClient.CompleteChatAsync(messages);
-    var output = string.Concat(result.Value.Content.Select(c => c.Text));
-    return new AgentResponse { Output = output };
-    
-  }
-
-  async Task<AgentResponse> IAgentService.SummarizeAsync(AgentRequest request)
-  {
-    var messages = new List<ChatMessage>
-    {
+  public async Task<AgentResponse> SummarizeAsync(AgentRequest request)
+    => await ExecuteAsync("summarize", request.Input, [
       new SystemChatMessage("Riassumi il testo in italiano in 5 punti chiave, con tono professionale."),
       new UserChatMessage(request.Input)
-    };
+    ]);
 
-    var result = await _chatClient.CompleteChatAsync(messages);
-    var output = string.Concat(result.Value.Content.Select(c => c.Text));
 
-    return new AgentResponse { Output = output };
+  private async Task<AgentResponse> ExecuteAsync(string operation, string inputPreview, List<ChatMessage> messages)
+  {
+    var requestId = Guid.NewGuid().ToString("N")[..8];
+    var sw = Stopwatch.StartNew();
+
+    _logger.LogInformation("[{RequestId}] [{Operation}] Starting — input length: {InputLength} chars", requestId, operation, inputPreview.Length);
+
+    try
+    {
+      var result = await _chatClient.CompleteChatAsync(messages);
+      var output = string.Concat(result.Value.Content.Select(c => c.Text));
+      sw.Stop();
+
+      _logger.LogInformation("[{RequestId}] [{Operation}] Completed in {ElapsedMs}ms — output length: {OutputLength} chars", requestId, operation, sw.ElapsedMilliseconds, output.Length);
+
+      return new AgentResponse
+      {
+        Output = output,
+        Operation = operation,
+        Model = _openAiOptions.DeploymentName,
+        RequestId = requestId,
+        TimestampUtc = DateTime.UtcNow,
+        ElapsedMs = sw.ElapsedMilliseconds
+      };
+    }
+    catch (RequestFailedException ex)
+    {
+      sw.Stop();
+      _logger.LogError(ex, "[{RequestId}] [{Operation}] Azure OpenAI request failed after {ElapsedMs}ms — Status: {StatusCode}", requestId, operation, sw.ElapsedMilliseconds, ex.Status);
+      throw;
+    }
+    catch (Exception ex)
+    {
+      sw.Stop();
+      _logger.LogError(ex, "[{RequestId}] [{Operation}] Unexpected error after {ElapsedMs}ms", requestId, operation, sw.ElapsedMilliseconds);
+      throw;
+    }
   }
+
+
 }

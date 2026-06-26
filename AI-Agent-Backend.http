@@ -1,6 +1,37 @@
 @AI_Agent_Backend_HostAddress = http://localhost:5149
 
-GET {{AI_Agent_Backend_HostAddress}}/weatherforecast/
+### Health check
+GET {{host}}/agent/health
 Accept: application/json
 
-###
+### Ask - free question to the model
+POST {{host}}/agent/ask
+Content-Type: application/json
+
+{
+  "input": "Cos'è Azure AI Foundry e a cosa serve?"
+}
+
+### Ask — technical question to the model
+POST {{host}}/agent/ask
+Content-Type: application/json
+
+{
+  "input": "Quali sono le differenze principali tra Azure OpenAI Service e Azure AI Foundry?"
+}
+
+### Summarize — text to summarize
+POST {{host}}/agent/summarize
+Content-Type: application/json
+
+{
+  "input": "Azure AI Foundry è una piattaforma unificata di Microsoft per progettare, sviluppare e distribuire applicazioni AI e agenti intelligenti. Permette di usare modelli di linguaggio come GPT-4, di integrare strumenti di grounding su dati aziendali, di costruire pipeline multi-agente e di monitorare le applicazioni in produzione con strumenti di osservabilità. Supporta scenari sia code-first che low-code, e si integra con Azure DevOps, GitHub Actions e i principali servizi Azure."
+}
+
+### Vaalidation: empty input — must return 400
+POST {{host}}/agent/ask
+Content-Type: application/json
+
+{
+  "input": ""
+}
