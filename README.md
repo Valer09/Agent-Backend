@@ -1,66 +1,56 @@
-# AI Agent Backend
+# ASP.NET Core REST Backend
 
-REST backend built with **.NET 9 / ASP.NET Core**, integrated with **Azure OpenAI / Azure AI Foundry**.  
-Exposes endpoints for conversational interaction (`ask`) and structured summarization (`summarize`) of technical content.
+REST backend built with **.NET 10 / ASP.NET Core**, integrating **Azure OpenAI** for text Q&A and summarization.
 
-***
+The project focuses on backend concerns such as API design, configuration, dependency injection, external-service integration, structured logging, error handling, containerization, and automated testing.
 
 ## Architecture
 
-```
+```text
 Client
-  │
-  ▼
-AgentController  (HTTP REST, input validation, HTTP error handling)
-  │
-  ▼
-AgentService     (LLM logic, structured logging, execution metrics)
-  │
-  ▼
-Azure OpenAI / AI Foundry  (GPT-4o or other deployed model)
+  |
+  v
+AgentController   HTTP endpoints, validation, error mapping
+  |
+  v
+AgentService      Azure OpenAI integration, logging, execution metrics
+  |
+  v
+Azure OpenAI      deployed language model
 ```
 
-***
+## Tech Stack
+
+- C# / .NET 10
+- ASP.NET Core
+- Azure OpenAI
+- Azure Key Vault integration for production configuration
+- Docker / Docker Compose
+- GitHub Actions
+- Swagger / OpenAPI
+- xUnit / WebApplicationFactory
 
 ## Prerequisites
 
-- [.NET 9 SDK](https://dotnet.microsoft.com/download)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download)
 - [Docker](https://docs.docker.com/get-docker/) (optional)
-- An active deployment on **Azure OpenAI** or **Azure AI Foundry**
-
-***
+- An Azure OpenAI deployment
 
 ## Configuration
 
-### Required variables
+Required settings:
 
 | Variable | Description |
 |---|---|
-| `AzureOpenAI__Endpoint` | Azure OpenAI resource URL, e.g. `https://xxx.openai.azure.com/` |
-| `AzureOpenAI__ApiKey` | Resource API Key |
-| `AzureOpenAI__DeploymentName` | Deployment name (e.g. `gpt-4o`) |
+| `AzureOpenAI__Endpoint` | Azure OpenAI resource endpoint |
+| `AzureOpenAI__ApiKey` | Azure OpenAI API key |
+| `AzureOpenAI__DeploymentName` | Model deployment name |
 
-### Local development
+For local development, use `appsettings.Development.json` or .NET User Secrets. Do not commit real credentials.
 
-In `appsettings.Development.json`:
-```json
-{
-  "AzureOpenAI": {
-    "Endpoint": "https://<your-resource>.openai.azure.com/",
-    "ApiKey": "<your-api-key>",
-    "DeploymentName": "<your-deployment>"
-  }
-}
-```
-
-> **Note:** `appsettings.Development.json` is listed in `.gitignore`. Never commit real credentials.
-
-Alternatively, use [.NET User Secrets](https://learn.microsoft.com/en-us/aspnet/core/security/app-secrets) to store the API key outside the project directory:
 ```bash
 dotnet user-secrets set "AzureOpenAI:ApiKey" "<your-api-key>"
 ```
-
-***
 
 ## Run locally
 
@@ -69,148 +59,74 @@ dotnet restore
 dotnet run
 ```
 
-API available at `http://localhost:5149` — Swagger UI: `http://localhost:5149/swagger`
-
-***
+By default, the API is available at `http://localhost:5149` and Swagger UI at:
+`http://localhost:5149/swagger`
 
 ## Run with Docker
 
 ```bash
-# Build image
-docker build -t ai-agent-backend .
+docker build -t aspnetcore-rest-backend .
 
-# Run with environment variables
 docker run -p 5149:8080 \
   -e AzureOpenAI__Endpoint="https://<your-resource>.openai.azure.com/" \
   -e AzureOpenAI__ApiKey="<your-api-key>" \
   -e AzureOpenAI__DeploymentName="<your-deployment>" \
-  ai-agent-backend
+  aspnetcore-rest-backend
 ```
 
 Or with Docker Compose:
+
 ```bash
-cp .env.example .env  # fill in your values
+cp .env.example .env
 docker compose up
 ```
 
-***
-
-## Endpoints
+## API
 
 ### `GET /agent/health`
 
-```json
-{ "status": "OK", "timestampUtc": "2026-06-26T10:00:00Z" }
-```
+Returns the application health status.
 
 ### `POST /agent/ask`
 
-Sends a question to the AI model.
+Sends a question to the configured language model.
 
-**Request:**
 ```json
 { "input": "What is Azure AI Foundry?" }
 ```
 
-**Response 200:**
-```json
-{
-  "output": "Azure AI Foundry is a unified Microsoft platform...",
-  "operation": "ask",
-  "model": "gpt-4o",
-  "requestId": "a3f2b1c0",
-  "timestampUtc": "2026-06-26T10:00:00.123Z",
-  "elapsedMs": 1240
-}
-```
-
 ### `POST /agent/summarize`
 
-Summarizes a text into 5 key points. Same response schema as `/ask`, with `"operation": "summarize"`.
+Summarizes the provided text into key points.
 
-### Error codes
+### Error handling
 
-| Code | Cause |
-|---|---|
-| 400 | Missing or invalid input |
-| 429 | Azure OpenAI rate limit exceeded |
-| 502 | Error returned by Azure OpenAI |
-| 500 | Unexpected internal error |
+The API maps validation errors and upstream Azure OpenAI failures to explicit HTTP responses, including `400`, `429`, `502`, and `500`.
 
-***
+## Testing
 
-## Testing the endpoints
+The test project uses `WebApplicationFactory` to exercise the HTTP API pipeline with a fake service implementation, covering health checks, valid requests, validation failures, and error handling without calling Azure OpenAI.
 
-Use the [`AgentApi.http`](./AgentApi.http) file in Visual Studio, Rider, or VS Code ([REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) extension).
+Run tests with:
 
-Or with curl:
 ```bash
-# Health
-curl http://localhost:5149/agent/health
-
-# Ask
-curl -X POST http://localhost:5149/agent/ask \
-  -H "Content-Type: application/json" \
-  -d '{"input": "What is Azure AI Foundry?"}'
-
-# Summarize
-curl -X POST http://localhost:5149/agent/summarize \
-  -H "Content-Type: application/json" \
-  -d '{"input": "Text to summarize..."}'
+dotnet test
 ```
-
-***
 
 ## Project structure
 
-```
-AI-Agent-Backend/
-├── Configuration/
-│   └── AzureOpenAIOptions.cs   # Options pattern with startup validation
-├── Controllers/
-│   └── AgentController.cs      # REST endpoints, HTTP error handling
-├── Model/
-│   ├── AgentRequest.cs         # Input with DataAnnotations validation
-│   └── AgentResponse.cs        # Enriched output (operation, model, requestId, elapsed)
-├── Service/
-│   ├── IAgentService.cs
-│   └── AgentService.cs         # Azure OpenAI integration, structured logging
-├── AgentApi.http               # HTTP request examples for IDE
+```text
+ASP.NET Core REST Backend/
+├── Configuration/       # Azure OpenAI options and validation
+├── Controllers/         # REST endpoints
+├── Model/               # Request/response models
+├── Service/             # Business logic and Azure OpenAI integration
+├── AgentApi.http        # Example HTTP requests
 ├── Dockerfile
 ├── docker-compose.yaml
 └── README.md
 ```
 
-***
+## Deployment
 
-
-
-## Live Demo
-
-Public endpoint deployed on **Azure Container Apps**:
-https://docassistantapp.lemonbush-92b0b723.eastus2.azurecontainerapps.io
-
-
-- `GET /agent/health`
-- `POST /agent/ask`
-- `POST /agent/summarize`
-
-## Future possible improvements
-
-- **CD pipeline via GitHub Actions** — automate Docker build, push to Azure Container Registry,
-  and Container Apps deployment on every push to `main`, replacing all manual CLI steps
-
-- **Azure Managed Identity authentication** — secretless access to Azure OpenAI and ACR,
-  eliminating API key management entirely
-
-- **Secret management hardening** — migrate API key from environment variable
-  to Azure Container Apps Secrets or Azure Key Vault reference
-
-- **Server-Sent Events (SSE) streaming** — real-time token-by-token response from the model
-
-- **Client-configurable system prompt** — allow callers to override the default system message per request
-
-- **Application-level rate limiting** — request throttling with `AspNetCoreRateLimit`
-
-- **Azure Monitor / Application Insights integration** — distributed tracing, metrics dashboards,
-  and alerting for production observability
+The application can be containerized and deployed to **Azure Container Apps**. Production configuration also supports loading secrets from **Azure Key Vault** via Azure identity credentials.
