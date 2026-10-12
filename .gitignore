@@ -365,3 +365,4 @@ FodyWeavers.xsd
 /agentkey.txt
 /docker-compose.local.yaml
 /appsettings.Development.json
+/.idea/.idea.AI-Agent-Backend/.idea/.gitignore
